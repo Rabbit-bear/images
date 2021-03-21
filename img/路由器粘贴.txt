@@ -1,0 +1,39 @@
+
+time.xmu.edu.cn
+cn.pool.ntp.org
+pool.ntp.org
+time.apple.com
+
+
+3118005069
+183230
+
+iptables -t nat -N ntp_force_local -p udp
+iptables -t nat -I PREROUTING -p udp --dport 123 -j ntp_force_local
+iptables -t nat -A ntp_force_local -d 0.0.0.0/8 -j RETURN
+iptables -t nat -A ntp_force_local -d 127.0.0.0/8 -j RETURN
+iptables -t nat -A ntp_force_local -d 192.168.0.0/16 -j RETURN
+iptables -t nat -A ntp_force_local -s 192.168.0.0/16 -j DNAT --to-destination 192.168.1.1
+iptables -t nat -N http_ua_drop
+iptables -t nat -I PREROUTING -p tcp --dport 80 -j http_ua_drop
+iptables -t nat -A http_ua_drop -m mark --mark 1/1 -j RETURN
+iptables -t nat -A http_ua_drop -d 0.0.0.0/8 -j RETURN
+iptables -t nat -A http_ua_drop -d 127.0.0.0/8 -j RETURN
+iptables -t nat -A http_ua_drop -d 192.168.0.0/16 -j RETURN
+iptables -t nat -A http_ua_drop -p tcp -j REDIRECT --to-port 8118
+iptables -t mangle -A PREROUTING -i eth0.2 -j TTL --ttl-set 64 //修改 WAN 口 TTL 值
+iptables -t mangle -A PREROUTING -i br-lan -j TTL --ttl-set 64 //修改 LAN 口 TTL 值
+
+iptables -I FORWARD -p tcp --sport 80 --tcp-flags ACK ACK -m string --algo bm --string " src=\"http://1.1.1." -j DROP
+
+
+40 4 * * * sleep 5 && touch /etc/banner && reboot
+
+
+http://config.privoxy.org/edit-actions-list?f=0
+
+--force-depends
+
+LELE1824541944
+
+
